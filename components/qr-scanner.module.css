@@ -7,19 +7,100 @@
 
 .scanner {
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   border-radius: 1rem;
   overflow: hidden;
-  border: 2px solid var(--primary);
-  background: black;
+  border: 1px solid var(--card-border);
+  background: #000;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
 }
 
 .instructions {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   color: #94a3b8;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  text-align: center;
+  font-weight: 500;
 }
 
-/* Hide some html5-qrcode internal UI elements for cleaner look */
-/* Note: Since these simple selectors might be global, we use specific nesting if possible or just accept it */
-/* html5-qrcode injects inline styles often, but let's try to override standard IDs if possible */
+/* ===== CUSTOM STYLING FOR HTML5-QRCODE LIBRARY ===== */
+
+/* Main scanner region - dark background */
+.scanner :global(#qr-reader-container__dashboard_section_csr) {
+  background: #0a0a0a !important;
+  border: none !important;
+}
+
+/* Video feed container */
+.scanner :global(video) {
+  border-radius: 0.5rem;
+  border: 1px solid var(--card-border);
+}
+
+/* Button styling - make them look premium */
+.scanner :global(button) {
+  background: var(--card-bg) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-family: inherit !important;
+}
+
+.scanner :global(button:hover) {
+  background: var(--card-bg-hover) !important;
+  border-color: var(--primary) !important;
+  transform: translateY(-1px);
+}
+
+/* File input button specific */
+.scanner :global(button#html5-qrcode-button-file-selection) {
+  display: none !important; /* Hide file upload, we only want camera */
+}
+
+/* Stop button */
+.scanner :global(button#html5-qrcode-button-camera-stop) {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--destructive) !important;
+  border-color: var(--destructive) !important;
+}
+
+/* Select dropdown styling */
+.scanner :global(select) {
+  background: var(--card-bg) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.75rem !important;
+  font-size: 0.95rem !important;
+  font-family: inherit !important;
+}
+
+/* Hide permission messages - we want clean UI */
+.scanner :global(.html5-qrcode-element) {
+  color: var(--foreground) !important;
+  font-size: 0.9rem !important;
+}
+
+/* QR box overlay styling */
+.scanner :global(#qr-shaded-region) {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Hide default messages */
+.scanner :global(#html5-qrcode-anchor-scan-type-change) {
+  display: none !important;
+}
+
+/* Center the controls */
+.scanner :global(#qr-reader-container__dashboard_section_csr > div) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+}

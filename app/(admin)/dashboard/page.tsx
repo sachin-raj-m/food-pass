@@ -138,7 +138,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <Link href={`/dashboard/events/${event.id}`} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-                                    Insights
+                                    Manage
                                 </Link>
                             </div>
                         ))}

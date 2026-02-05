@@ -45,6 +45,8 @@ export default function EventDetailsPage() {
     const [deleting, setDeleting] = useState(false)
     const [updating, setUpdating] = useState(false)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
     useEffect(() => {
@@ -63,8 +65,18 @@ export default function EventDetailsPage() {
     }
 
     const fetchEventDetails = async () => {
-        const { data } = await supabase.from('events').select('*').eq('id', eventId).single()
-        setEvent(data)
+        try {
+            const { data, error } = await supabase.from('events').select('*').eq('id', eventId).single()
+            if (error) throw error
+            if (!data) throw new Error('Event not found')
+            setEvent(data)
+        } catch (err: any) {
+            console.error('Error fetching event:', err)
+            setError(err.message)
+            showToast('Failed to load event details', 'error')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const fetchStats = async () => {
@@ -258,7 +270,31 @@ export default function EventDetailsPage() {
         }
     }
 
-    if (!event) return <div className="container">Loading...</div>
+
+
+    // ... (rest of functions)
+
+    if (loading) return (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <RefreshCw className="spin" size={32} />
+            <p style={{ marginTop: '1rem', color: '#a3a3a3' }}>Loading event details...</p>
+            <style jsx>{`
+                .spin { animation: spin 1s linear infinite; }
+                @keyframes spin { 100% { transform: rotate(360deg); } }
+            `}</style>
+        </div>
+    )
+
+    if (error || !event) return (
+        <div className="card" style={{ padding: '3rem', textAlign: 'center', maxWidth: '600px', margin: '2rem auto' }}>
+            <h2 style={{ color: 'var(--destructive)', marginBottom: '1rem' }}>Error Loading Event</h2>
+            <p style={{ marginBottom: '1.5rem' }}>{error || 'Event could not be found.'}</p>
+            <Link href="/dashboard/events" className="btn btn-primary" style={{ display: 'inline-flex' }}>
+                <ArrowLeft size={18} style={{ marginRight: '0.5rem' }} />
+                Back to Events
+            </Link>
+        </div>
+    )
 
     const totalRedeemed = stats.reduce((acc, curr) => acc + curr.used_count, 0)
     const totalGenerated = stats.reduce((acc, curr) => acc + curr.total_count, 0)
