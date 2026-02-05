@@ -1,0 +1,203 @@
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  --foreground-muted: #a3a3a3;
+  
+  /* Primary Action: White Glow */
+  --primary: #ffffff;
+  --primary-invert: #000000;
+  
+  /* Surface */
+  --card-bg: #0a0a0a;
+  --card-border: #262626;
+  
+  /* Functional Colors (kept vibrant for visibility but minimal) */
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #eab308;
+  
+  --glow-color: rgba(255, 255, 255, 0.15);
+  --glow-strong: rgba(255, 255, 255, 0.3);
+  
+  --font-main: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --radius: 0.75rem;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-main);
+  /* Bleed Effect: Subtle top gradient */
+  background-image: 
+    radial-gradient(circle at 50% 0%, #171717 0%, transparent 60%),
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.03) 0%, transparent 30%);
+  min-height: 100vh;
+  letter-spacing: -0.02em; /* Tight tracking */
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-invert);
+  /* Soft Glow */
+  box-shadow: 0 0 15px -3px rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px -3px rgba(255, 255, 255, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 0 10px -3px rgba(255, 255, 255, 0.4);
+}
+
+.btn-secondary {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--foreground);
+}
+
+.btn-secondary:hover {
+  border-color: var(--foreground-muted);
+  background: #171717;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--foreground-muted);
+}
+
+.btn-outline:hover {
+  color: var(--foreground);
+  border-color: var(--foreground);
+  box-shadow: 0 0 15px -5px var(--glow-color);
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  border-color: #404040;
+  box-shadow: 0 0 40px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Add a subtle shine effect on card hover */
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.03),
+    transparent
+  );
+  transition: 0.5s;
+  pointer-events: none;
+}
+
+.card:hover::after {
+  left: 100%;
+  transition: 0.5s;
+}
+
+/* Inputs */
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius);
+  background: #050505;
+  border: 1px solid var(--card-border);
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 1px var(--foreground), 0 0 15px -3px var(--glow-color);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.03em;
+}
+
+p {
+  line-height: 1.6;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Utilities */
+.text-muted {
+  color: var(--foreground-muted);
+}
+
+/* Glass Effect (Optional, for overlays) */
+.glass {
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--card-border);
+}

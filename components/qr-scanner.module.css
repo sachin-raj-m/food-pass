@@ -1,0 +1,25 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.scanner {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 2px solid var(--primary);
+  background: black;
+}
+
+.instructions {
+  margin-top: 1rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* Hide some html5-qrcode internal UI elements for cleaner look */
+/* Note: Since these simple selectors might be global, we use specific nesting if possible or just accept it */
+/* html5-qrcode injects inline styles often, but let's try to override standard IDs if possible */
