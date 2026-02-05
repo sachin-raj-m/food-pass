@@ -14,52 +14,95 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
     const [isScanning, setIsScanning] = useState(false)
     const [permissionError, setPermissionError] = useState<string | null>(null)
     const scannerRef = useRef<Html5Qrcode | null>(null)
-    const containerId = 'qr-reader-container'
+    const [containerId] = useState(`qr-reader-container-${Math.random().toString(36).substr(2, 9)}`)
+    const mountedRef = useRef(true)
 
     const startScanning = async () => {
         setPermissionError(null)
+
+        // Ensure element exists
+        if (!document.getElementById(containerId)) {
+            console.error("Scanner container not found")
+            return
+        }
+
         try {
-            if (!scannerRef.current) {
-                scannerRef.current = new Html5Qrcode(containerId)
+            // Cleanup existing instance if any (safety check)
+            if (scannerRef.current) {
+                try {
+                    await scannerRef.current.stop()
+                    scannerRef.current.clear()
+                } catch (e) {
+                    // Ignore stop errors
+                }
+                scannerRef.current = null
             }
 
-            await scannerRef.current.start(
-                { facingMode: "environment" }, // Force rear camera
+            // Create new instance
+            const scanner = new Html5Qrcode(containerId)
+            scannerRef.current = scanner
+
+            await scanner.start(
+                { facingMode: "environment" },
                 {
                     fps: 10,
                     qrbox: { width: 250, height: 250 },
                     aspectRatio: 1.0
                 },
                 (decodedText) => {
-                    stopScanning()
-                    onScan(decodedText)
+                    if (mountedRef.current) {
+                        stopScanning()
+                        onScan(decodedText)
+                    }
                 },
                 (errorMessage) => {
                     // Ignore frame parse errors
                 }
             )
-            setIsScanning(true)
+
+            if (mountedRef.current) {
+                setIsScanning(true)
+            } else {
+                // If unmounted immediately after start
+                await scanner.stop()
+            }
+
         } catch (err: any) {
             console.error("Error starting scanner:", err)
-            setPermissionError("Camera permission denied or not available. Please allow camera access.")
+            if (mountedRef.current) {
+                setPermissionError("Camera permission denied or not available. Please allow camera access.")
+                setIsScanning(false)
+            }
         }
     }
 
     const stopScanning = async () => {
-        if (scannerRef.current && isScanning) {
+        if (scannerRef.current) {
             try {
+                // Check if it's running before stopping
+                // Html5Qrcode doesn't expose isScanning cleanly on the instance sometimes, 
+                // but calling stop() on stopped scanner throws.
+                // We rely on our isScanning state or try/catch.
                 await scannerRef.current.stop()
-                setIsScanning(false)
+                scannerRef.current.clear()
             } catch (err) {
-                console.error("Failed to stop scanner", err)
+                console.warn("Failed to stop scanner (might be already stopped):", err)
+            }
+            scannerRef.current = null
+            if (mountedRef.current) {
+                setIsScanning(false)
             }
         }
     }
 
     useEffect(() => {
+        mountedRef.current = true
         return () => {
-            if (scannerRef.current && scannerRef.current.isScanning) {
-                scannerRef.current.stop().catch(console.error)
+            mountedRef.current = false
+            if (scannerRef.current) {
+                scannerRef.current.stop().catch(() => { })
+                scannerRef.current.clear()
+                scannerRef.current = null
             }
         }
     }, [])
@@ -78,7 +121,8 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
                     minHeight: '300px',
                     display: isScanning ? 'block' : 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    position: 'relative'
                 }}
             >
                 {!isScanning && (
