@@ -169,3 +169,8 @@ BEGIN
   GROUP BY c.meal_type;
 END;
 $$;
+
+-- PERFORMANCE INDEXES
+CREATE INDEX IF NOT EXISTS idx_coupons_event_meal ON coupons(event_id, meal_type);
+CREATE INDEX IF NOT EXISTS idx_redemptions_coupon_id ON redemptions(coupon_id);
+CREATE INDEX IF NOT EXISTS idx_redemptions_redeemed_by ON redemptions(redeemed_by);

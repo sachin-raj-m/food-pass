@@ -5,9 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Download, RefreshCw, Ticket, Check, X } from 'lucide-react'
 import Link from 'next/link'
-import QRCode from 'qrcode'
-import JSZip from 'jszip'
-import { saveAs } from 'file-saver'
+// Dynamic imports moved to functions: QRCode, JSZip, file-saver
 import Toast, { ToastType } from '@/components/Toast'
 import Modal from '@/components/Modal'
 
@@ -121,6 +119,7 @@ export default function EventDetailsPage() {
                 return
             }
 
+            const JSZip = (await import('jszip')).default
             const zip = new JSZip()
             const folder = zip.folder(`coupons-${eventId.slice(0, 8)}`)
 
@@ -171,6 +170,7 @@ export default function EventDetailsPage() {
                 ctx.fillText(`MEAL: ${(coupon.meal_type || 'STANDARD').toUpperCase()}`, 50, 240)
 
                 // QR Code
+                const QRCode = (await import('qrcode')).default
                 const qrPayload = JSON.stringify({ id: coupon.id })
                 const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 150, margin: 1, color: { dark: '#ffffff', light: '#00000000' } })
 
@@ -194,6 +194,8 @@ export default function EventDetailsPage() {
                     folder?.file(`ticket-${coupon.ticket_number || coupon.id.slice(0, 8)}.png`, blob)
                 }
             }
+
+            const { saveAs } = (await import('file-saver'))
 
             const content = await zip.generateAsync({ type: 'blob' })
             saveAs(content, `tickets-${event.title.replace(/\s+/g, '-').toLowerCase()}.zip`)
