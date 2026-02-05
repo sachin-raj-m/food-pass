@@ -61,15 +61,30 @@ export async function POST(
     // 4. Generate Coupons
     const newCoupons = []
 
+    // Generate base timestamp string: DDMMYYYYHHMMSS
+    const now = new Date()
+    const day = String(now.getDate()).padStart(2, '0')
+    const month = String(now.getMonth() + 1).padStart(2, '0') // Month is 0-indexed
+    const year = String(now.getFullYear())
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const seconds = String(now.getSeconds()).padStart(2, '0')
+
+    const basePattern = `${day}${month}${year}${hours}${minutes}${seconds}`
+
     for (let i = 0; i < numCoupons; i++) {
         const id = crypto.randomUUID()
+        // Add a 4-digit sequence suffix to ensure uniqueness within the batch
+        const sequence = String(i + 1).padStart(4, '0')
+        const ticketNumber = `${basePattern}${sequence}`
 
         newCoupons.push({
             id,
             event_id: eventId,
             meal_type: meal_type,
             expires_at: event.coupon_expiry_time,
-            status: 'unused'
+            status: 'unused',
+            ticket_number: ticketNumber
         })
     }
 

@@ -33,7 +33,7 @@ CREATE TABLE events (
 -- COUPONS
 CREATE TABLE coupons (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  ticket_number SERIAL,
+  ticket_number TEXT,
   event_id UUID REFERENCES events(id) ON DELETE CASCADE NOT NULL,
   meal_type TEXT NOT NULL CHECK (meal_type IN ('breakfast', 'lunch', 'snacks', 'dinner')),
   expires_at TIMESTAMPTZ NOT NULL,

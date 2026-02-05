@@ -33,6 +33,13 @@ export default function EventDetailsPage() {
     const [generating, setGenerating] = useState(false)
     const [downloading, setDownloading] = useState(false)
 
+    // UI States
+    const [toast, setToast] = useState<{ message: string, type: ToastType } | null>(null)
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [lastGenCount, setLastGenCount] = useState(0)
+    const [redemptionLogs, setRedemptionLogs] = useState<any[]>([])
+
     const [isEditing, setIsEditing] = useState(false)
     const [editForm, setEditForm] = useState({ title: '', venue: '', event_date: '' })
     const [deleting, setDeleting] = useState(false)
@@ -212,7 +219,7 @@ export default function EventDetailsPage() {
     const handleUpdateEvent = async () => {
         setUpdating(true)
         try {
-            const { error } = await supabase
+            const { error } = await (supabase as any)
                 .from('events')
                 .update({
                     title: editForm.title,
@@ -266,6 +273,7 @@ export default function EventDetailsPage() {
                 description={`Successfully generated ${lastGenCount} tickets. Would you like to download them now?`}
                 confirmText="Download Tickets"
                 cancelText="Later"
+                variant="success"
                 onConfirm={() => {
                     setShowSuccessModal(false)
                     handleDownloadZip()
@@ -278,6 +286,7 @@ export default function EventDetailsPage() {
                 title="Generate Coupons"
                 description={`Are you sure you want to generate ${genCount} coupons for ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}? This action cannot be undone.`}
                 confirmText="Generate"
+                variant="default"
                 onConfirm={handleGenerate}
                 onCancel={() => setShowConfirmModal(false)}
                 isLoading={generating}
@@ -288,7 +297,7 @@ export default function EventDetailsPage() {
                 title="Delete Event"
                 description="Are you sure you want to delete this event? This will delete ALL generated coupons and stats. This action cannot be undone."
                 confirmText="Delete Event"
-                confirmColor="var(--destructive)"
+                variant="danger"
                 onConfirm={handleDeleteEvent}
                 onCancel={() => setShowDeleteModal(false)}
                 isLoading={deleting}
@@ -399,13 +408,6 @@ export default function EventDetailsPage() {
                             </div>
                         </div>
 
-                        {/* DELETE BUTTON - Only in Edit Mode */}
-                        <div className="card" style={{ border: '1px solid var(--destructive)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                            <h3 className="label" style={{ color: 'var(--destructive)' }}>Danger Zone</h3>
-                            <button className="btn" style={{ background: 'var(--destructive)', color: 'white', marginTop: '1rem' }} onClick={() => setShowDeleteModal(true)}>
-                                Delete Event
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}
@@ -448,13 +450,17 @@ export default function EventDetailsPage() {
                     )}
                 </div>
 
-                {/* Original Generate Coupons was here - REMOVED/MOVED */}
-
-                <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1rem' }}>
                     <h3 className="label">Actions</h3>
                     <button className="btn btn-outline" onClick={handleDownloadZip} disabled={downloading || totalGenerated === 0} style={{ width: '100%', justifyContent: 'center' }}>
                         <Download size={20} style={{ marginRight: '0.5rem' }} />
                         {downloading ? 'Zipping...' : 'Download Tickets'}
+                    </button>
+
+                    <div style={{ height: '1px', background: 'var(--card-border)', margin: '0.5rem 0' }} />
+
+                    <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--destructive)', border: '1px solid var(--destructive)', width: '100%', justifyContent: 'center' }} onClick={() => setShowDeleteModal(true)}>
+                        Delete Event
                     </button>
                 </div>
             </div>
