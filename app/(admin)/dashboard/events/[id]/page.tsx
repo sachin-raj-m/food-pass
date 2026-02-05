@@ -246,10 +246,10 @@ export default function EventDetailsPage() {
             </Link>
 
             <div className="card" style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexWrap: 'wrap', gap: '1rem' }}>
                     <div>
-                        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{event.title}</h1>
-                        <div style={{ display: 'flex', gap: '2rem', color: '#94a3b8' }}>
+                        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', lineHeight: 1.2 }}>{event.title}</h1>
+                        <div style={{ display: 'flex', gap: '1.5rem', color: '#94a3b8', flexWrap: 'wrap' }}>
                             <span>{event.venue}</span>
                             <span>{new Date(event.event_date).toLocaleDateString()}</span>
                         </div>
@@ -260,7 +260,7 @@ export default function EventDetailsPage() {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                 {/* Stats Grid */}
                 <div className="card" style={{ gridColumn: '1 / -1' }}>
                     <h3 className="label" style={{ marginBottom: '1.5rem' }}>Meal Breakdown</h3>
@@ -300,10 +300,10 @@ export default function EventDetailsPage() {
 
                 <div className="card">
                     <h3 className="label">Generate Coupons</h3>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
                         <select
                             className="input"
-                            style={{ marginBottom: 0, width: 'auto' }}
+                            style={{ marginBottom: 0, flex: '1 1 150px' }}
                             value={mealType}
                             onChange={(e) => setMealType(e.target.value)}
                         >
@@ -315,13 +315,13 @@ export default function EventDetailsPage() {
                         <input
                             type="number"
                             className="input"
-                            style={{ marginBottom: 0, width: '100px' }}
+                            style={{ marginBottom: 0, width: '100px', flex: '0 1 100px' }}
                             value={genCount}
                             onChange={(e) => setGenCount(parseInt(e.target.value))}
                             min={1}
                             max={1000}
                         />
-                        <button className="btn btn-primary" onClick={() => setShowConfirmModal(true)} disabled={generating}>
+                        <button className="btn btn-primary" onClick={() => setShowConfirmModal(true)} disabled={generating} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                             {generating ? 'Generating...' : 'Generate'}
                         </button>
                     </div>

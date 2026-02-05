@@ -131,7 +131,7 @@ export default function DashboardPage() {
                                     <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
                                         {new Date(event.event_date).toLocaleDateString()}
                                     </div>
-                                    <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem' }}>
+                                    <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', flexWrap: 'wrap' }}>
                                         <span style={{ color: '#94a3b8' }}>Generated: <strong style={{ color: 'var(--foreground)' }}>{event.stats.total}</strong></span>
                                         <span style={{ color: '#94a3b8' }}>Redeemed: <strong style={{ color: 'var(--success)' }}>{event.stats.used}</strong></span>
                                         <span style={{ color: '#94a3b8' }}>Rate: <strong style={{ color: 'var(--primary)' }}>{event.stats.total ? ((event.stats.used / event.stats.total) * 100).toFixed(0) : 0}%</strong></span>
