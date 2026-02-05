@@ -7,13 +7,14 @@ interface ModalProps {
     title: string
     description: string
     confirmText?: string
+    confirmColor?: string
     cancelText?: string
     onConfirm: () => void
     onCancel: () => void
     isLoading?: boolean
 }
 
-export default function Modal({ isOpen, title, description, confirmText = 'Confirm', cancelText = 'Cancel', onConfirm, onCancel, isLoading }: ModalProps) {
+export default function Modal({ isOpen, title, description, confirmText = 'Confirm', confirmColor, cancelText = 'Cancel', onConfirm, onCancel, isLoading }: ModalProps) {
     if (!isOpen) return null
 
     return (
@@ -55,6 +56,7 @@ export default function Modal({ isOpen, title, description, confirmText = 'Confi
                     <button
                         onClick={onConfirm}
                         className="btn btn-primary"
+                        style={confirmColor ? { background: confirmColor, borderColor: confirmColor } : {}}
                         disabled={isLoading}
                     >
                         {isLoading ? 'Processing...' : confirmText}

@@ -51,6 +51,163 @@ export default function EventDetailsPage() {
     }, [event])
 
     // ... existing handlers (fetchEvent, fetchStats, etc.)
+    const showToast = (message: string, type: ToastType) => {
+        setToast({ message, type })
+    }
+
+    const fetchEventDetails = async () => {
+        const { data } = await supabase.from('events').select('*').eq('id', eventId).single()
+        setEvent(data)
+    }
+
+    const fetchStats = async () => {
+        const { data, error } = await (supabase as any).rpc('get_event_stats', { event_uuid: eventId })
+        if (data) {
+            setStats(data as MealStat[])
+        } else if (error) {
+            console.error('Stats error:', error)
+        }
+    }
+
+    const fetchRedemptionLogs = async () => {
+        const { data: coupons } = await supabase.from('coupons').select('id').eq('event_id', eventId)
+        if (!coupons || coupons.length === 0) return
+
+        const couponIds = (coupons as any[]).map(c => c.id)
+
+        const { data: logs } = await supabase
+            .from('redemptions')
+            .select('*, profiles(email)')
+            .in('coupon_id', couponIds)
+            .order('redeemed_at', { ascending: false })
+            .limit(20)
+
+        if (logs) setRedemptionLogs(logs)
+    }
+
+    const handleGenerate = async () => {
+        setShowConfirmModal(false)
+        setGenerating(true)
+        try {
+            const res = await fetch(`/api/events/${eventId}/generate-coupons`, {
+                method: 'POST',
+                body: JSON.stringify({ count: genCount, meal_type: mealType })
+            })
+            const data = await res.json()
+
+            if (!res.ok) throw new Error(data.error)
+
+            setLastGenCount(data.coupons.length)
+            setShowSuccessModal(true)
+            fetchStats()
+        } catch (err: any) {
+            showToast(err.message, 'error')
+        } finally {
+            setGenerating(false)
+        }
+    }
+
+    const handleDownloadZip = async () => {
+        setDownloading(true)
+        try {
+            const res = await fetch(`/api/events/${eventId}/coupons`)
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+
+            const coupons: Coupon[] = data.coupons
+            if (coupons.length === 0) {
+                showToast('No coupons to download.', 'info')
+                return
+            }
+
+            const JSZip = (await import('jszip')).default
+            const zip = new JSZip()
+            const folder = zip.folder(`coupons-${eventId.slice(0, 8)}`)
+
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            const width = 600
+            const height = 400
+            canvas.width = width
+            canvas.height = height
+
+            if (!ctx) throw new Error('Could not get canvas context')
+
+            for (const coupon of coupons) {
+                ctx.fillStyle = '#0a0a0a'
+                ctx.fillRect(0, 0, width, height)
+
+                // Glow Border
+                ctx.strokeStyle = '#262626'
+                ctx.lineWidth = 1
+                ctx.strokeRect(20, 20, width - 40, height - 40)
+
+                // Header
+                ctx.fillStyle = '#ffffff'
+                ctx.font = 'bold 24px Inter, sans-serif'
+                ctx.textAlign = 'left'
+                ctx.fillText('FOOD PASS', 50, 70)
+
+                // Ticket Number
+                ctx.fillStyle = '#737373'
+                ctx.font = '16px monospace'
+                ctx.textAlign = 'right'
+                ctx.fillText(`TICKET #${coupon.ticket_number || '---'}`, width - 50, 70)
+
+                // Event Title
+                ctx.fillStyle = '#ffffff'
+                ctx.font = 'bold 32px Inter, sans-serif'
+                ctx.textAlign = 'left'
+                ctx.fillText(event.title, 50, 140)
+
+                // Details (Meal, Date)
+                ctx.font = '20px Inter, sans-serif'
+                ctx.fillStyle = '#a3a3a3'
+                ctx.fillText(`${new Date(event.event_date).toLocaleDateString()} • ${event.venue}`, 50, 180)
+
+                // MEAL TYPE Badge
+                ctx.fillStyle = '#ffffff'
+                ctx.font = 'bold 24px Inter, sans-serif'
+                ctx.fillText(`MEAL: ${(coupon.meal_type || 'STANDARD').toUpperCase()}`, 50, 240)
+
+                // QR Code
+                const QRCode = (await import('qrcode')).default
+                const qrPayload = JSON.stringify({ id: coupon.id })
+                const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 150, margin: 1, color: { dark: '#ffffff', light: '#00000000' } })
+
+                await new Promise<void>((resolve) => {
+                    const img = new Image()
+                    img.onload = () => {
+                        ctx.drawImage(img, width - 180, height - 180, 130, 130)
+                        resolve()
+                    }
+                    img.src = qrDataUrl
+                })
+
+                // Footer ID
+                ctx.font = '12px monospace'
+                ctx.fillStyle = '#404040'
+                ctx.textAlign = 'left'
+                ctx.fillText(coupon.id, 50, 350)
+
+                const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve))
+                if (blob) {
+                    folder?.file(`ticket-${coupon.ticket_number || coupon.id.slice(0, 8)}.png`, blob)
+                }
+            }
+
+            const { saveAs } = (await import('file-saver'))
+
+            const content = await zip.generateAsync({ type: 'blob' })
+            saveAs(content, `tickets-${event.title.replace(/\\s+/g, '-').toLowerCase()}.zip`)
+            showToast('Tickets downloaded successfully!', 'success')
+
+        } catch (err: any) {
+            showToast('Error downloading tickets: ' + err.message, 'error')
+        } finally {
+            setDownloading(false)
+        }
+    }
 
     const handleUpdateEvent = async () => {
         setUpdating(true)
