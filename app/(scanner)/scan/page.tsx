@@ -45,9 +45,24 @@ export default function ScanPage() {
             })
 
         } catch (err: any) {
+            let userMessage = err.message
+
+            // Provide more specific error messages
+            if (err.message === 'Missing ID') {
+                userMessage = 'This QR code is not a valid food ticket'
+            } else if (err.message.includes('Invalid QR')) {
+                userMessage = 'Unable to read QR code. Please try again'
+            } else if (err.message.includes('already used')) {
+                userMessage = 'This ticket has already been redeemed'
+            } else if (err.message.includes('expired')) {
+                userMessage = 'This ticket has expired'
+            } else if (err.message.includes('Unauthorized') || err.message.includes('Forbidden')) {
+                userMessage = 'You are not authorized to redeem tickets'
+            }
+
             setScanResult({
                 success: false,
-                message: err.message
+                message: userMessage
             })
         } finally {
             setProcessing(false)

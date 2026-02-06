@@ -51,7 +51,7 @@ export default function DashboardPage() {
         })
 
         if (events) {
-            // Fetch stats for each event
+            // Fetch stats for each event (N+1 query - can be optimized later with proper typed RPC)
             const eventsWithStats = await Promise.all((events as any[]).map(async (event) => {
                 const { count: total } = await supabase.from('coupons').select('*', { count: 'exact', head: true }).eq('event_id', event.id)
                 const { count: used } = await supabase.from('coupons').select('*', { count: 'exact', head: true }).eq('event_id', event.id).eq('status', 'used')

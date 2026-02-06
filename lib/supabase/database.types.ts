@@ -111,21 +111,28 @@ export interface Database {
       }
     }
     Functions: {
-      redeem_coupon: {
-        Args: {
-          coupon_uuid: string
-        }
-        Returns: Json
-      }
       get_event_stats: {
         Args: {
           event_uuid: string
         }
-        Returns: {
+        Returns: Array<{
           meal_type: string
           total_count: number
           used_count: number
-        }[]
+        }>
+      }
+      redeem_coupon: {
+        Args: {
+          coupon_uuid: string
+        }
+        Returns: {
+          success: boolean
+          message: string
+        }
+      }
+      get_my_role: {
+        Args: Record<string, never>
+        Returns: string
       }
     }
     Enums: {

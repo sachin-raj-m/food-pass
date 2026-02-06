@@ -87,6 +87,7 @@ export default function EventDetailsPage() {
     }
 
     const fetchStats = async () => {
+        // Type cast needed due to Supabase generated types limitation with RPC
         const { data, error } = await (supabase as any).rpc('get_event_stats', { event_uuid: eventId })
         if (data) {
             setStats(data as MealStat[])
@@ -239,6 +240,7 @@ export default function EventDetailsPage() {
     const handleUpdateEvent = async () => {
         setUpdating(true)
         try {
+            // Type cast needed due to Supabase generated types limitation
             const { error } = await (supabase as any)
                 .from('events')
                 .update({
