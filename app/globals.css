@@ -50,6 +50,15 @@ a {
   text-decoration: none;
 }
 
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
 /* Utilities */
 .container {
   max-width: 1200px;
