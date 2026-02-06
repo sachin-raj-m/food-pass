@@ -58,7 +58,14 @@ export async function POST(
         return NextResponse.json({ error: `Coupons for ${meal_type} already generated for this event.` }, { status: 400 })
     }
 
-    // Get the current max ticket number for this event to continue sequence
+    // Generate date prefix from event date (DDMMYY format)
+    const eventDate = new Date(event.event_date)
+    const day = String(eventDate.getDate()).padStart(2, '0')
+    const month = String(eventDate.getMonth() + 1).padStart(2, '0')
+    const year = String(eventDate.getFullYear()).slice(-2) // Get last 2 digits of year
+    const datePrefix = parseInt(`${day}${month}${year}`) // e.g., 060226 for Feb 6, 2026
+
+    // Get the current max ticket number for this event to find the sequence
     const { data: maxTicket } = await (supabase.from('coupons') as any)
         .select('ticket_number')
         .eq('event_id', eventId)
@@ -66,16 +73,22 @@ export async function POST(
         .limit(1)
         .maybeSingle()
 
-    // Start from the next number after max, or 1 if no coupons exist
-    const startingNumber = maxTicket ? maxTicket.ticket_number + 1 : 1
+    // Extract the sequence number from the max ticket (last 2 digits)
+    let sequence = 1
+    if (maxTicket) {
+        const maxTicketStr = String(maxTicket.ticket_number)
+        const lastTwoDigits = maxTicketStr.slice(-2)
+        sequence = parseInt(lastTwoDigits) + 1
+    }
 
     // 4. Generate Coupons
     const newCoupons = []
 
     for (let i = 0; i < numCoupons; i++) {
         const id = crypto.randomUUID()
-        // Simple sequential ticket number (safe for integer type)
-        const ticketNumber = startingNumber + i
+        // Date-prefixed ticket number: DDMMYY + sequence (e.g., 06022601)
+        const currentSequence = sequence + i
+        const ticketNumber = datePrefix * 100 + currentSequence
 
         newCoupons.push({
             id,
