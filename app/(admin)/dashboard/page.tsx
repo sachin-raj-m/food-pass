@@ -1,8 +1,6 @@
-
-
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Filter } from 'lucide-react'
@@ -18,11 +16,7 @@ export default function DashboardPage() {
 
     const supabase = createClient()
 
-    useEffect(() => {
-        fetchDashboardData()
-    }, [dateRange])
-
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = useCallback(async () => {
         setLoading(true)
 
         // 1. Apply Date Filters to Global Stats
@@ -67,7 +61,11 @@ export default function DashboardPage() {
         }
 
         setLoading(false)
-    }
+    }, [supabase, dateRange])
+
+    useEffect(() => {
+        fetchDashboardData()
+    }, [fetchDashboardData])
 
     return (
         <div>

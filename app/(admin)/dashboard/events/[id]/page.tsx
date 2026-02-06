@@ -49,6 +49,14 @@ export default function EventDetailsPage() {
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
+    // Fetch event data on mount
+    useEffect(() => {
+        fetchEventDetails()
+        fetchStats()
+        fetchRedemptionLogs()
+    }, [eventId])
+
+    // Update edit form when event loads
     useEffect(() => {
         if (event) {
             setEditForm({
@@ -59,7 +67,6 @@ export default function EventDetailsPage() {
         }
     }, [event])
 
-    // ... existing handlers (fetchEvent, fetchStats, etc.)
     const showToast = (message: string, type: ToastType) => {
         setToast({ message, type })
     }
@@ -110,6 +117,7 @@ export default function EventDetailsPage() {
         try {
             const res = await fetch(`/api/events/${eventId}/generate-coupons`, {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ count: genCount, meal_type: mealType })
             })
             const data = await res.json()
