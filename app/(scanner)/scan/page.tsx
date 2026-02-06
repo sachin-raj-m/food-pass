@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import QRScanner from '@/components/QRScanner'
-import { CheckCircle, XCircle, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Camera, Scan, BarChart3 } from 'lucide-react'
 
 export default function ScanPage() {
     const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null)
     const [scanning, setScanning] = useState(true)
     const [processing, setProcessing] = useState(false)
+    const [sessionStats, setSessionStats] = useState({ verified: 0, rejected: 0 })
+    const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
 
     const handleScan = async (decodedText: string) => {
         setScanning(false)
@@ -43,6 +45,8 @@ export default function ScanPage() {
                 success: true,
                 message: 'Coupon Valid! Food Served.'
             })
+            setSessionStats(prev => ({ ...prev, verified: prev.verified + 1 }))
+            setShowSuccessAnimation(true)
 
         } catch (err: any) {
             let userMessage = err.message
@@ -64,6 +68,7 @@ export default function ScanPage() {
                 success: false,
                 message: userMessage
             })
+            setSessionStats(prev => ({ ...prev, rejected: prev.rejected + 1 }))
         } finally {
             setProcessing(false)
         }
@@ -72,63 +77,127 @@ export default function ScanPage() {
     const resetScanner = () => {
         setScanResult(null)
         setScanning(true)
+        setShowSuccessAnimation(false)
     }
 
+    useEffect(() => {
+        if (showSuccessAnimation) {
+            const timer = setTimeout(() => setShowSuccessAnimation(false), 1500)
+            return () => clearTimeout(timer)
+        }
+    }, [showSuccessAnimation])
+
     return (
-        <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '1rem' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1.5rem', minHeight: '100vh' }}>
+
+            {/* Header with Stats */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Scan size={32} style={{ color: 'var(--primary)' }} />
+                        Ticket Scanner
+                    </h1>
+                    <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>Scan QR codes to verify and redeem tickets</p>
+                </div>
+
+                {(sessionStats.verified > 0 || sessionStats.rejected > 0) && (
+                    <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem' }}>
+                        <div className="card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '80px' }}>
+                            <CheckCircle size={18} color="var(--success)" />
+                            <div>
+                                <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Verified</div>
+                                <div style={{ color: 'var(--success)', fontWeight: 600, fontSize: '1.25rem' }}>{sessionStats.verified}</div>
+                            </div>
+                        </div>
+                        <div className="card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '80px' }}>
+                            <XCircle size={18} color="var(--error)" />
+                            <div>
+                                <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Rejected</div>
+                                <div style={{ color: 'var(--error)', fontWeight: 600, fontSize: '1.25rem' }}>{sessionStats.rejected}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {scanning ? (
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <h2 style={{ marginBottom: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>Scan Ticket</h2>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+                    {/* Instructions Card */}
+                    <div className="card" style={{ width: '100%', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.03)' }}>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Camera size={20} />
+                            How to Scan
+                        </h3>
+                        <ol style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#d4d4d4', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                            <li>Allow camera access when prompted</li>
+                            <li>Position the QR code within the scanning frame</li>
+                            <li>Hold steady - scanner will automatically detect the code</li>
+                            <li>Wait for verification result</li>
+                        </ol>
+                    </div>
+
+                    {/* Scanner */}
                     <QRScanner onScan={handleScan} />
                 </div>
             ) : processing ? (
-                <div className="card" style={{ padding: '3rem', textAlign: 'center', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <RefreshCw className="spin" size={48} style={{ marginBottom: '1.5rem', color: 'var(--primary)' }} />
-                    <h3 style={{ fontSize: '1.25rem' }}>Verifying Ticket...</h3>
-                </div>
-            ) : (
                 <div className="card" style={{
-                    padding: '2.5rem',
+                    padding: '4rem 2rem',
                     textAlign: 'center',
                     width: '100%',
-                    border: scanResult?.success ? '1px solid var(--success)' : '1px solid var(--destructive)',
-                    background: '#0a0a0a',
-                    boxShadow: scanResult?.success ? '0 0 30px rgba(16, 185, 129, 0.2)' : '0 0 30px rgba(239, 68, 68, 0.2)',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    animation: 'fadeIn 0.3s ease'
+                }}>
+                    <RefreshCw className="spin" size={56} style={{ marginBottom: '1.5rem', color: 'var(--primary)' }} />
+                    <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Verifying Ticket...</h3>
+                    <p style={{ color: '#94a3b8' }}>Please wait</p>
+                </div>
+            ) : (
+                <div className={showSuccessAnimation ? "card success-pulse" : "card"} style={{
+                    padding: '3rem 2rem',
+                    textAlign: 'center',
+                    width: '100%',
+                    border: scanResult?.success ? '2px solid var(--success)' : '2px solid var(--error)',
+                    background: scanResult?.success ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+                    boxShadow: scanResult?.success ? '0 0 40px rgba(16, 185, 129, 0.2)' : '0 0 40px rgba(239, 68, 68, 0.2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    animation: 'scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}>
                     {scanResult?.success ? (
                         <>
                             <div style={{
-                                width: '80px', height: '80px', borderRadius: '50%',
-                                background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                marginBottom: '1.5rem'
+                                width: '100px', height: '100px', borderRadius: '50%',
+                                background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                marginBottom: '1.5rem',
+                                animation: showSuccessAnimation ? 'successPulse 0.6s ease' : 'none'
                             }}>
-                                <CheckCircle size={48} color="var(--success)" />
+                                <CheckCircle size={56} color="var(--success)" strokeWidth={2.5} />
                             </div>
-                            <h2 style={{ color: 'var(--success)', marginBottom: '0.5rem', fontSize: '1.75rem' }}>VERIFIED</h2>
-                            <p style={{ fontSize: '1.1rem', color: '#d4d4d4' }}>{scanResult.message}</p>
+                            <h2 style={{ color: 'var(--success)', marginBottom: '0.75rem', fontSize: '2rem', fontWeight: 700 }}>VERIFIED ✓</h2>
+                            <p style={{ fontSize: '1.15rem', color: '#e5e5e5', marginBottom: '0.5rem' }}>{scanResult.message}</p>
+                            <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Ticket successfully redeemed</p>
                         </>
                     ) : (
                         <>
                             <div style={{
-                                width: '80px', height: '80px', borderRadius: '50%',
-                                background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '100px', height: '100px', borderRadius: '50%',
+                                background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 marginBottom: '1.5rem'
                             }}>
-                                <XCircle size={48} color="var(--destructive)" />
+                                <XCircle size={56} color="var(--error)" strokeWidth={2.5} />
                             </div>
-                            <h2 style={{ color: 'var(--destructive)', marginBottom: '0.5rem', fontSize: '1.75rem' }}>REJECTED</h2>
-                            <p style={{ fontSize: '1.1rem', color: '#d4d4d4' }}>{scanResult?.message}</p>
+                            <h2 style={{ color: 'var(--error)', marginBottom: '0.75rem', fontSize: '2rem', fontWeight: 700 }}>REJECTED ✗</h2>
+                            <p style={{ fontSize: '1.15rem', color: '#e5e5e5' }}>{scanResult?.message}</p>
                         </>
                     )}
 
-                    <div style={{ marginTop: '2.5rem', width: '100%' }}>
-                        <button className="btn btn-primary" onClick={resetScanner} style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
-                            <RefreshCw size={20} style={{ marginRight: '0.5rem' }} />
-                            Verify Next Ticket
+                    <div style={{ marginTop: '2.5rem', width: '100%', maxWidth: '300px' }}>
+                        <button className="btn btn-primary" onClick={resetScanner} style={{ width: '100%', justifyContent: 'center', padding: '1.1rem', fontSize: '1.05rem', fontWeight: 600 }}>
+                            <RefreshCw size={20} style={{ marginRight: '0.75rem' }} />
+                            Scan Next Ticket
                         </button>
                     </div>
                 </div>
@@ -138,6 +207,24 @@ export default function ScanPage() {
                 @keyframes spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.9); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                @keyframes successPulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.1); }
+                }
+                .spin {
+                    animation: spin 1s linear infinite;
+                }
+                .success-pulse {
+                    animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                 }
             `}</style>
         </div>
