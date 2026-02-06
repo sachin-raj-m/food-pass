@@ -170,3 +170,46 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Role updated successfully' })
 }
+
+export async function DELETE(request: Request) {
+    const cookieStore = await cookies()
+    const supabase = createServerClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() { return cookieStore.getAll() },
+                setAll() { },
+            },
+        }
+    )
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { data: profile } = await (supabase.from('profiles') as any).select('role').eq('id', user.id).single()
+    if (!profile || profile.role !== 'admin') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { userId } = await request.json()
+    if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
+    if (userId === user.id) return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return NextResponse.json({ error: 'Server Config Error' }, { status: 500 })
+
+    const supabaseAdmin = createClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceRoleKey,
+        { auth: { persistSession: false } }
+    )
+
+    const { error: profileError } = await (supabaseAdmin.from('profiles') as any).delete().eq('id', userId)
+    if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
+
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+    if (authError) return NextResponse.json({ error: authError.message }, { status: 500 })
+
+    return NextResponse.json({ success: true, message: 'User deleted successfully' })
+}

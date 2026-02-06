@@ -58,25 +58,24 @@ export async function POST(
         return NextResponse.json({ error: `Coupons for ${meal_type} already generated for this event.` }, { status: 400 })
     }
 
+    // Get the current max ticket number for this event to continue sequence
+    const { data: maxTicket } = await (supabase.from('coupons') as any)
+        .select('ticket_number')
+        .eq('event_id', eventId)
+        .order('ticket_number', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    // Start from the next number after max, or 1 if no coupons exist
+    const startingNumber = maxTicket ? maxTicket.ticket_number + 1 : 1
+
     // 4. Generate Coupons
     const newCoupons = []
 
-    // Generate base timestamp string: DDMMYYYYHHMMSS
-    const now = new Date()
-    const day = String(now.getDate()).padStart(2, '0')
-    const month = String(now.getMonth() + 1).padStart(2, '0') // Month is 0-indexed
-    const year = String(now.getFullYear())
-    const hours = String(now.getHours()).padStart(2, '0')
-    const minutes = String(now.getMinutes()).padStart(2, '0')
-    const seconds = String(now.getSeconds()).padStart(2, '0')
-
-    const basePattern = `${day}${month}${year}${hours}${minutes}${seconds}`
-
     for (let i = 0; i < numCoupons; i++) {
         const id = crypto.randomUUID()
-        // Add a 4-digit sequence suffix to ensure uniqueness within the batch
-        const sequence = String(i + 1).padStart(4, '0')
-        const ticketNumber = `${basePattern}${sequence}`
+        // Simple sequential ticket number (safe for integer type)
+        const ticketNumber = startingNumber + i
 
         newCoupons.push({
             id,
