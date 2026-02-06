@@ -80,6 +80,7 @@ export default function ScanPage() {
         e.preventDefault()
         if (!ticketCode.trim()) return
 
+        setScanning(false)  // Now hide the input form
         setProcessing(true)
         setManualEntry(false)
 
@@ -138,7 +139,7 @@ export default function ScanPage() {
 
     const toggleManualEntry = () => {
         setManualEntry(!manualEntry)
-        setScanning(false)
+        // Keep scanning=true so we stay in the input mode (not result mode)
     }
 
     useEffect(() => {
