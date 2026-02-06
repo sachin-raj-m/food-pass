@@ -70,20 +70,25 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   color: white;
 }
 
 .active {
   background: var(--primary);
   color: var(--primary-invert);
-  box-shadow: 0 0 15px -3px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px -3px rgba(255, 255, 255, 0.3);
+  font-weight: 600;
 }
 
 .active:hover {
   background: var(--primary);
-  opacity: 0.9;
+  color: var(--primary-invert);
+  box-shadow: 0 0 20px -3px rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+  opacity: 1;
 }
+
 
 .footer {
   padding: 1.5rem;

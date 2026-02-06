@@ -23,8 +23,15 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
                         qrbox: { width: 250, height: 250 },
                         formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
                         rememberLastUsedCamera: true,
-                        defaultZoomValueIfSupported: 2,
-                        showTorchButtonIfSupported: true
+                        // Mobile-specific: prefer rear camera
+                        aspectRatio: 1.0,
+                        // Request rear camera for mobile devices
+                        videoConstraints: {
+                            facingMode: { ideal: 'environment' }
+                        },
+                        showTorchButtonIfSupported: true,
+                        // Better for mobile performance
+                        useBarCodeDetectorIfSupported: true
                     },
                     false
                 )
@@ -33,11 +40,14 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
 
                 scanner.render(
                     (decodedText) => {
-                        scanner.clear()
+                        scanner.clear().catch(console.error)
                         onScan(decodedText)
                     },
                     (errorMessage) => {
-                        if (onError) onError(errorMessage)
+                        // Only log actual errors, not scanning failures
+                        if (onError && !errorMessage.includes('NotFoundException')) {
+                            onError(errorMessage)
+                        }
                     }
                 )
             }
@@ -47,6 +57,7 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
             clearTimeout(timer)
             if (scannerRef.current) {
                 scannerRef.current.clear().catch(console.error)
+                scannerRef.current = null
             }
         }
     }, [onScan, onError])

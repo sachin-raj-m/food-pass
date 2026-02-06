@@ -112,12 +112,15 @@ export default function Modal({
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="btn btn-primary"
+                        className={`btn ${variant === 'danger' ? 'btn-destructive' : 'btn-primary'}`}
                         style={{
                             flex: 1,
                             justifyContent: 'center',
-                            background: currentVariant.confirmBg,
-                            borderColor: currentVariant.confirmBorder
+                            ...(variant === 'success' && {
+                                background: 'var(--success)',
+                                color: 'white',
+                                boxShadow: '0 0 15px -3px rgba(34, 197, 94, 0.3)'
+                            })
                         }}
                         disabled={isLoading}
                     >

@@ -89,6 +89,12 @@ a {
   box-shadow: 0 0 10px -3px rgba(255, 255, 255, 0.4);
 }
 
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-secondary {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -98,6 +104,11 @@ a {
 .btn-secondary:hover {
   border-color: var(--foreground-muted);
   background: #171717;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-outline {
@@ -111,6 +122,35 @@ a {
   border-color: var(--foreground);
   box-shadow: 0 0 15px -5px var(--glow-color);
 }
+
+.btn-outline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-destructive {
+  background: var(--error);
+  color: white;
+  border: 1px solid var(--error);
+  box-shadow: 0 0 15px -3px rgba(239, 68, 68, 0.3);
+}
+
+.btn-destructive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px -3px rgba(239, 68, 68, 0.5);
+  background: #dc2626;
+}
+
+.btn-destructive:active {
+  transform: translateY(0);
+  box-shadow: 0 0 10px -3px rgba(239, 68, 68, 0.4);
+}
+
+.btn-destructive:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 
 /* Cards */
 .card {
