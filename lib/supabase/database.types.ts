@@ -64,7 +64,7 @@ export interface Database {
       coupons: {
         Row: {
           id: string
-          ticket_number: number
+          ticket_number: string
           event_id: string
           meal_type: 'breakfast' | 'lunch' | 'snacks' | 'dinner'
           expires_at: string
@@ -73,14 +73,18 @@ export interface Database {
         }
         Insert: {
           id?: string
+          ticket_number: string
           event_id: string
+          meal_type: 'breakfast' | 'lunch' | 'snacks' | 'dinner'
           expires_at: string
           status?: 'unused' | 'used' | 'expired'
           created_at?: string
         }
         Update: {
           id?: string
+          ticket_number?: string
           event_id?: string
+          meal_type?: 'breakfast' | 'lunch' | 'snacks' | 'dinner'
           expires_at?: string
           status?: 'unused' | 'used' | 'expired'
           created_at?: string

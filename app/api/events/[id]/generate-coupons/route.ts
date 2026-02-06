@@ -33,7 +33,7 @@ export async function POST(
     if (!profile || profile.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     // 2. Parse Body
-    const { count, meal_type } = await request.json()
+    const { count, meal_type, ticket_prefix } = await request.json()
     const numCoupons = parseInt(count)
 
     if (isNaN(numCoupons) || numCoupons <= 0 || numCoupons > 1000) {
@@ -58,27 +58,28 @@ export async function POST(
         return NextResponse.json({ error: `Coupons for ${meal_type} already generated for this event.` }, { status: 400 })
     }
 
-    // Generate date prefix from event date (DDMMYY format)
-    const eventDate = new Date(event.event_date)
-    const day = String(eventDate.getDate()).padStart(2, '0')
-    const month = String(eventDate.getMonth() + 1).padStart(2, '0')
-    const year = String(eventDate.getFullYear()).slice(-2) // Get last 2 digits of year
-    const datePrefix = parseInt(`${day}${month}${year}`) // e.g., 060226 for Feb 6, 2026
+    // Get the ticket prefix from the request (user-specified per meal type)
+    const prefix = ticket_prefix || ''
 
     // Get the current max ticket number for this event to find the sequence
-    const { data: maxTicket } = await (supabase.from('coupons') as any)
+    const { data: existingCoupons } = await (supabase.from('coupons') as any)
         .select('ticket_number')
         .eq('event_id', eventId)
         .order('ticket_number', { ascending: false })
-        .limit(1)
-        .maybeSingle()
 
-    // Extract the sequence number from the max ticket (last 2 digits)
+    // Determine starting sequence number
     let sequence = 1
-    if (maxTicket) {
-        const maxTicketStr = String(maxTicket.ticket_number)
-        const lastTwoDigits = maxTicketStr.slice(-2)
-        sequence = parseInt(lastTwoDigits) + 1
+    if (existingCoupons && existingCoupons.length > 0) {
+        // Extract the numeric part from the last ticket
+        const lastTicket = existingCoupons[0].ticket_number
+        if (prefix) {
+            // Format: PREFIX01 - extract the numeric part
+            const numericPart = lastTicket.replace(prefix, '')
+            sequence = parseInt(numericPart) + 1
+        } else {
+            // Simple numeric tickets
+            sequence = parseInt(lastTicket) + 1
+        }
     }
 
     // 4. Generate Coupons
@@ -86,9 +87,11 @@ export async function POST(
 
     for (let i = 0; i < numCoupons; i++) {
         const id = crypto.randomUUID()
-        // Date-prefixed ticket number: DDMMYY + sequence (e.g., 06022601)
+        // Generate ticket number based on prefix
         const currentSequence = sequence + i
-        const ticketNumber = datePrefix * 100 + currentSequence
+        const ticketNumber = prefix
+            ? `${prefix}${String(currentSequence).padStart(2, '0')}`  // e.g., DRLU01
+            : String(currentSequence) // e.g., 1, 2, 3
 
         newCoupons.push({
             id,

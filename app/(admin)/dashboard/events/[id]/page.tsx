@@ -30,6 +30,7 @@ export default function EventDetailsPage() {
     const [stats, setStats] = useState<MealStat[]>([])
     const [genCount, setGenCount] = useState(10)
     const [mealType, setMealType] = useState('lunch')
+    const [ticketPrefix, setTicketPrefix] = useState('')
     const [generating, setGenerating] = useState(false)
     const [downloading, setDownloading] = useState(false)
 
@@ -119,7 +120,7 @@ export default function EventDetailsPage() {
             const res = await fetch(`/api/events/${eventId}/generate-coupons`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ count: genCount, meal_type: mealType })
+                body: JSON.stringify({ count: genCount, meal_type: mealType, ticket_prefix: ticketPrefix.trim().toUpperCase() || null })
             })
             const data = await res.json()
 
@@ -427,27 +428,45 @@ export default function EventDetailsPage() {
                         {/* GENERATE COUPONS - Only in Edit Mode */}
                         <div className="card" style={{ border: '1px solid var(--card-border)' }}>
                             <h3 className="label">Generate Coupons</h3>
-                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
-                                <select
-                                    className="input"
-                                    style={{ marginBottom: 0, flex: '1 1 150px' }}
-                                    value={mealType}
-                                    onChange={(e) => setMealType(e.target.value)}
-                                >
-                                    <option value="breakfast">Breakfast</option>
-                                    <option value="lunch">Lunch</option>
-                                    <option value="snacks">Snacks</option>
-                                    <option value="dinner">Dinner</option>
-                                </select>
-                                <input
-                                    type="number"
-                                    className="input"
-                                    style={{ marginBottom: 0, width: '100px', flex: '0 1 100px' }}
-                                    value={genCount}
-                                    onChange={(e) => setGenCount(parseInt(e.target.value))}
-                                    min={1}
-                                    max={1000}
-                                />
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginTop: '1rem', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 150px' }}>
+                                    <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.3rem' }}>Meal Type</label>
+                                    <select
+                                        className="input"
+                                        style={{ marginBottom: 0 }}
+                                        value={mealType}
+                                        onChange={(e) => setMealType(e.target.value)}
+                                    >
+                                        <option value="breakfast">Breakfast</option>
+                                        <option value="lunch">Lunch</option>
+                                        <option value="snacks">Snacks</option>
+                                        <option value="dinner">Dinner</option>
+                                    </select>
+                                </div>
+                                <div style={{ flex: '1 1 120px' }}>
+                                    <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.3rem' }}>Prefix (Opt)</label>
+                                    <input
+                                        className="input"
+                                        style={{ marginBottom: 0, textTransform: 'uppercase' }}
+                                        value={ticketPrefix}
+                                        onChange={(e) => setTicketPrefix(e.target.value)}
+                                        placeholder="e.g. BF, DRLU"
+                                        maxLength={10}
+                                        title="Ticket prefix (e.g., BF01, DRLU01)"
+                                    />
+                                </div>
+                                <div style={{ flex: '0 1 100px' }}>
+                                    <label className="label" style={{ fontSize: '0.75rem', marginBottom: '0.3rem' }}>Count</label>
+                                    <input
+                                        type="number"
+                                        className="input"
+                                        style={{ marginBottom: 0 }}
+                                        value={genCount}
+                                        onChange={(e) => setGenCount(parseInt(e.target.value))}
+                                        min={1}
+                                        max={1000}
+                                    />
+                                </div>
                                 <button className="btn btn-primary" onClick={() => setShowConfirmModal(true)} disabled={generating} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                                     {generating ? 'Generating...' : 'Generate'}
                                 </button>
