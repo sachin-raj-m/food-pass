@@ -25,13 +25,28 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { id } = body
+    const { id, ticket_number } = body
 
-    if (!id) {
-        return NextResponse.json({ error: 'Invalid QR payload: Missing ID' }, { status: 400 })
+    let couponId = id
+
+    // If ticket_number provided instead of QR id, look up the coupon
+    if (!couponId && ticket_number) {
+        const { data: coupon } = await (supabase.from('coupons') as any)
+            .select('id')
+            .eq('ticket_number', ticket_number)
+            .single()
+
+        if (!coupon) {
+            return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
+        }
+        couponId = coupon.id
     }
 
-    const { data, error } = await (supabase.rpc as any)('redeem_coupon', { coupon_uuid: id })
+    if (!couponId) {
+        return NextResponse.json({ error: 'Invalid request: Missing ticket ID or number' }, { status: 400 })
+    }
+
+    const { data, error } = await (supabase.rpc as any)('redeem_coupon', { coupon_uuid: couponId })
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 })

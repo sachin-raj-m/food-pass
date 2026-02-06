@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import QRScanner from '@/components/QRScanner'
-import { CheckCircle, XCircle, RefreshCw, Camera, Scan, BarChart3 } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Camera, Scan, BarChart3, Keyboard } from 'lucide-react'
 
 export default function ScanPage() {
     const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null)
@@ -10,6 +10,8 @@ export default function ScanPage() {
     const [processing, setProcessing] = useState(false)
     const [sessionStats, setSessionStats] = useState({ verified: 0, rejected: 0 })
     const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+    const [manualEntry, setManualEntry] = useState(false)
+    const [ticketCode, setTicketCode] = useState('')
 
     const handleScan = async (decodedText: string) => {
         setScanning(false)
@@ -74,10 +76,69 @@ export default function ScanPage() {
         }
     }
 
+    const handleManualSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!ticketCode.trim()) return
+
+        setProcessing(true)
+        setManualEntry(false)
+
+        try {
+            const res = await fetch('/api/redeem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ticket_number: ticketCode.trim() })
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Verification Failed')
+            }
+
+            setScanResult({
+                success: true,
+                message: 'Ticket Valid! Food Served.'
+            })
+            setSessionStats(prev => ({ ...prev, verified: prev.verified + 1 }))
+            setShowSuccessAnimation(true)
+            setTicketCode('')
+
+        } catch (err: any) {
+            let userMessage = err.message
+
+            if (err.message.includes('not found')) {
+                userMessage = 'Ticket number not found'
+            } else if (err.message.includes('already used')) {
+                userMessage = 'This ticket has already been redeemed'
+            } else if (err.message.includes('expired')) {
+                userMessage = 'This ticket has expired'
+            }
+
+            setScanResult({
+                success: false,
+                message: userMessage
+            })
+            setSessionStats(prev => ({ ...prev, rejected: prev.rejected + 1 }))
+            setTicketCode('')
+        } finally {
+            setProcessing(false)
+        }
+    }
+
     const resetScanner = () => {
         setScanResult(null)
         setScanning(true)
         setShowSuccessAnimation(false)
+        setManualEntry(false)
+        setTicketCode('')
+    }
+
+    const toggleManualEntry = () => {
+        setManualEntry(!manualEntry)
+        setScanning(false)
     }
 
     useEffect(() => {
@@ -122,22 +183,77 @@ export default function ScanPage() {
 
             {scanning ? (
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-                    {/* Instructions Card */}
-                    <div className="card" style={{ width: '100%', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.03)' }}>
-                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Camera size={20} />
-                            How to Scan
-                        </h3>
-                        <ol style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#d4d4d4', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                            <li>Allow camera access when prompted</li>
-                            <li>Position the QR code within the scanning frame</li>
-                            <li>Hold steady - scanner will automatically detect the code</li>
-                            <li>Wait for verification result</li>
-                        </ol>
+                    {/* Mode Toggle */}
+                    <div style={{ display: 'flex', gap: '0.75rem', width: '100%', justifyContent: 'center' }}>
+                        <button
+                            onClick={() => { setManualEntry(false); setScanning(true); }}
+                            className={!manualEntry ? "btn btn-primary" : "btn btn-outline"}
+                            style={{ flex: '1 1 0', maxWidth: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        >
+                            <Camera size={18} />
+                            Scan QR
+                        </button>
+                        <button
+                            onClick={toggleManualEntry}
+                            className={manualEntry ? "btn btn-primary" : "btn btn-outline"}
+                            style={{ flex: '1 1 0', maxWidth: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        >
+                            <Keyboard size={18} />
+                            Enter Code
+                        </button>
                     </div>
 
-                    {/* Scanner */}
-                    <QRScanner onScan={handleScan} />
+                    {manualEntry ? (
+                        /* Manual Entry Form */
+                        <div className="card" style={{ width: '100%', padding: '2rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Keyboard size={20} />
+                                Enter Ticket Number
+                            </h3>
+                            <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                                Type the ticket number from the coupon (e.g., BF01, DRLU25, or 101)
+                            </p>
+                            <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <input
+                                    type="text"
+                                    className="input"
+                                    value={ticketCode}
+                                    onChange={(e) => setTicketCode(e.target.value.toUpperCase())}
+                                    placeholder="e.g., BF01, DRLU25, 101"
+                                    autoFocus
+                                    style={{ fontSize: '1.25rem', textAlign: 'center', letterSpacing: '0.05em', fontWeight: 600 }}
+                                />
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={!ticketCode.trim()}
+                                    style={{ fontSize: '1.1rem', padding: '0.875rem' }}
+                                >
+                                    Verify Ticket
+                                </button>
+                            </form>
+                        </div>
+                    ) : (
+                        /* QR Scanner Mode */
+                        <>
+                            {/* Instructions Card */}
+                            <div className="card" style={{ width: '100%', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.03)' }}>
+                                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Camera size={20} />
+                                    How to Scan
+                                </h3>
+                                <ol style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#d4d4d4', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                                    <li>Allow camera access when prompted</li>
+                                    <li>Position the QR code within the scanning frame</li>
+                                    <li>Hold steady - scanner will automatically detect the code</li>
+                                    <li>Wait for verification result</li>
+                                </ol>
+                            </div>
+
+                            {/* Scanner */}
+                            <QRScanner onScan={handleScan} />
+                        </>
+                    )}
                 </div>
             ) : processing ? (
                 <div className="card" style={{
