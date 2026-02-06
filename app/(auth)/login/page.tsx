@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import styles from './login.module.css'
 
 export default function LoginPage() {
@@ -48,6 +50,11 @@ export default function LoginPage() {
 
     return (
         <div className={styles.container}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', marginBottom: '1rem', textDecoration: 'none', fontSize: '0.9rem' }}>
+                <ArrowLeft size={18} />
+                Back to Home
+            </Link>
+
             <div className={`card ${styles.loginCard}`}>
                 <h2 className={styles.title}>Welcome Back</h2>
                 <p className={styles.subtitle}>Sign in to access Food Pass</p>
